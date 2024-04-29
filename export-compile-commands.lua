@@ -91,8 +91,8 @@ function m.onWorkspace(wks)
       for i = 1, #cmds do
         local item = cmds[i]
         p.push('{')
-        p.x('"directory": "%s"', item.directory)
-        p.x('"file": "%s"', item.file)
+        p.x('"directory": "%s",', item.directory)
+        p.x('"file": "%s",', item.file)
         p.w('"command": "%s"', item.command)
         if i ~= #cmds then
           p.pop('},')
