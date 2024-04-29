@@ -48,10 +48,13 @@ function m.getFileFlags(prj, cfg, node)
 end
 
 function m.generateCompileCommand(prj, cfg, node)
+  local toolset = m.getToolset(cfg)
+  local tool = path.iscfile(node.abspath) and 'cc' or 'cxx'
+  local tool = toolset.gettoolname(cfg, tool) or tool
   return {
     directory = prj.location,
     file = node.abspath,
-    command = (path.iscfile(node.abspath) and 'cc ' or 'cxx ') .. table.concat(m.getFileFlags(prj, cfg, node), ' ')
+    command = (tool .. " " .. table.concat(m.getFileFlags(prj, cfg, node), ' '))
   }
 end
 
