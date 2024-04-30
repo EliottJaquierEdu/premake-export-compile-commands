@@ -6,6 +6,24 @@ local m = p.modules.export_compile_commands
 local workspace = p.workspace
 local project = p.project
 
+local function esc(s)
+  s = s:gsub('\\', '\\\\')
+  s = s:gsub('"', '\\"')
+  return s
+end
+
+local function esc_table(t)
+  local res = {}
+  for k, v in pairs(t) do
+    table.insert(res, esc(v))
+  end
+  return res
+end
+
+local function quote(s)
+  return '"' .. esc(s) .. '"'
+end
+
 function m.getToolset(cfg)
   return p.tools[cfg.toolset or 'gcc']
 end
@@ -41,9 +59,9 @@ end
 
 function m.getFileFlags(prj, cfg, node)
   return table.join(m.getCommonFlags(prj, cfg), {
-    '-o', m.getObjectPath(prj, cfg, node),
-    '-MF', m.getDependenciesPath(prj, cfg, node),
-    '-c', node.abspath
+    '-o', quote(m.getObjectPath(prj, cfg, node)),
+    '-MF', quote(m.getDependenciesPath(prj, cfg, node)),
+    '-c', quote(node.abspath)
   })
 end
 
@@ -54,7 +72,7 @@ function m.generateCompileCommand(prj, cfg, node)
   return {
     directory = prj.location,
     file = node.abspath,
-    command = (tool .. " " .. table.concat(m.getFileFlags(prj, cfg, node), ' '))
+    command = (tool .. " " .. table.concat(esc_table(m.getFileFlags(prj, cfg, node)), ' '))
   }
 end
 
