@@ -111,7 +111,13 @@ end
 newaction {
   trigger = 'export-compile-commands',
   description = 'Export compiler commands in JSON Compilation Database Format',
-  onWorkspace = m.onWorkspace
+  onWorkspace = m.onWorkspace,
+  toolset = "clang",
+  valid_kinds = { "ConsoleApp", "WindowedApp", "Makefile", "SharedLib", "StaticLib", "Utility" },
+  valid_languages = { "C", "C++" },
+  valid_tools = {
+    cc = { "gcc", "clang" }
+  }
 }
 
 return m
