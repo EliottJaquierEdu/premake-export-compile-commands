@@ -65,14 +65,41 @@ function m.getFileFlags(prj, cfg, node)
   })
 end
 
+local function computesystemincludepaths(tool, iscfile)
+  local cmd = tool .. " -E -v -fsyntax-only " .. (iscfile and '-x c' or '-x c++') .. ' "' .. _MAIN_SCRIPT .. '"' -- Use script as dummy "c" file
+  local s,e = os.outputof(cmd, "both")
+  if not s or not e then return {} end
+  local s = string.match(s, "#include <...> search starts here:\n(.*)End of search list.\n")
+  local includepaths = {}
+  for w in string.gmatch(s, " *([^\n]+) *") do
+    table.insert(includepaths, path.normalize(w))
+  end
+  return includepaths
+end
+
+local systemincludepathscache = {}
+
+local function getsystemincludepaths(tool, iscfile)
+  if not systemincludepathscache[tool] then systemincludepathscache[tool] = {} end
+  local toolcache = systemincludepathscache[tool]
+  if not toolcache[iscfile] then toolcache[iscfile] = computesystemincludepaths(tool, iscfile) end
+  return toolcache[iscfile]
+end
+
+local function getsystemflags(tool, iscfile)
+  return table.implode(getsystemincludepaths(tool, iscfile), ' -isystem \\"', '\\"', '')
+end
+
 function m.generateCompileCommand(prj, cfg, node)
   local toolset = m.getToolset(cfg)
   local tool = path.iscfile(node.abspath) and 'cc' or 'cxx'
+  cfg.gccprefix = cfg.gccprefix or "" -- hack to have gcc.gettoolname return non-nil
   local tool = toolset.gettoolname(cfg, tool) or tool
+  local system_flag = getsystemflags(tool, path.iscfile(node.abspath))
   return {
     directory = prj.location,
     file = node.abspath,
-    command = (tool .. " " .. table.concat(esc_table(m.getFileFlags(prj, cfg, node)), ' '))
+    command = (tool .. system_flag .. " " .. table.concat(esc_table(m.getFileFlags(prj, cfg, node)), ' '))
   }
 end
 
