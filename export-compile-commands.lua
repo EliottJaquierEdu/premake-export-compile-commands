@@ -37,7 +37,7 @@ function m.getCommonFlags(prj, cfg)
   local flags = toolset.getcppflags(cfg)
   flags = table.join(flags, toolset.getdefines(cfg.defines))
   flags = table.join(flags, toolset.getundefines(cfg.undefines))
-  flags = table.join(flags, toolset.getincludedirs(cfg, cfg.includedirs, cfg.sysincludedirs))
+  flags = table.join(flags, toolset.getincludedirs(cfg, cfg.includedirs, cfg.externalincludedirs))
   flags = table.join(flags, toolset.getforceincludes(cfg))
   if project.iscpp(prj) then
     flags = table.join(flags, toolset.getcxxflags(cfg))
