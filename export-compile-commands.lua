@@ -90,21 +90,30 @@ local function getsystemflags(tool, iscfile)
   return table.implode(getsystemincludepaths(tool, iscfile), ' -isystem \\"', '\\"', '')
 end
 
+local function getlanguageflags(cfg)
+  local toolset = m.getToolset(cfg)
+  local compileas = toolset.shared and toolset.shared.compileas
+  if compileas then
+	return compileas[cfg.language] or ""
+  end
+end
+
 function m.generateCompileCommand(prj, cfg, node)
   local toolset = m.getToolset(cfg)
   local tool = path.iscfile(node.abspath) and 'cc' or 'cxx'
   cfg.gccprefix = cfg.gccprefix or "" -- hack to have gcc.gettoolname return non-nil
   local tool = toolset.gettoolname(cfg, tool) or tool
   local system_flag = getsystemflags(tool, path.iscfile(node.abspath))
+  local language_flag = getlanguageflags(cfg) .. " "
   return {
     directory = prj.location,
     file = node.abspath,
-    command = (tool .. system_flag .. " " .. table.concat(esc_table(m.getFileFlags(prj, cfg, node)), ' '))
+    command = (tool .. system_flag .. " " .. language_flag .. table.concat(esc_table(m.getFileFlags(prj, cfg, node)), ' '))
   }
 end
 
 function m.includeFile(prj, node, depth)
-  return path.iscppfile(node.abspath) or path.iscfile(node.abspath)
+  return path.iscppfile(node.abspath) or path.iscfile(node.abspath) or path.iscppheader(node.abspath)
 end
 
 function m.getProjectCommands(prj, cfg)
@@ -112,10 +121,9 @@ function m.getProjectCommands(prj, cfg)
   local cmds = {}
   p.tree.traverse(tr, {
     onleaf = function(node, depth)
-      if not m.includeFile(prj, node, depth) then
-        return
+      if m.includeFile(prj, node, depth) then
+        table.insert(cmds, m.generateCompileCommand(prj, cfg, node))
       end
-      table.insert(cmds, m.generateCompileCommand(prj, cfg, node))
     end
   })
   return cmds
