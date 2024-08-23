@@ -21,6 +21,42 @@ function m.getIncludeDirs(cfg)
   return flags
 end
 
+function m.getCppStandard(cfg)
+  if cfg.language ~= 'C++' or cfg.cppdialect == nil or cfg.cppdialect == '' then
+    return ''
+  end
+
+  -- From premake-core/modules/d/actions/vcxproj.lua
+  local standards = {
+    ['Default']   = 'c++17',   -- the default C++ dialect for the toolset
+    ['C++latest'] = 'c++20',   -- the latest C++ dialect for the toolset or action where available, otherwise the latest C++ dialect supported by Premake
+    ['C++98']     = 'c++98',   -- ISO C++98
+    ['C++0x']     = 'c++11',   -- ISO C++11 Draft
+    ['C++11']     = 'c++11',   -- ISO C++11
+    ['C++1y']     = 'c++14',   -- ISO C++14 Draft
+    ['C++14']     = 'c++14',   -- ISO C++14
+    ['C++1z']     = 'c++17',   -- ISO C++17 Draft
+    ['C++17']     = 'c++17',   -- ISO C++17
+    ['C++2a']     = 'c++20',   -- ISO C++20 Draft
+    ['C++20']     = 'c++20',   -- ISO C++20
+	  ['gnu++98']   = 'c++98',   -- GNU dialect of ISO C++98
+	  ['gnu++0x']   = 'c++11',   -- GNU dialect of ISO C++11 Draft
+	  ['gnu++11']   = 'c++11',   -- GNU dialect of ISO C++11
+	  ['gnu++1y']   = 'c++14',   -- GNU dialect of ISO C++14 Draft
+	  ['gnu++14']   = 'c++14',   -- GNU dialect of ISO C++14
+	  ['gnu++1z']   = 'c++17',   -- GNU dialect of ISO C++17 Draft
+	  ['gnu++17']   = 'c++17',   -- GNU dialect of ISO C++17
+	  ['gnu++2a']   = 'c++20',   -- GNU dialect of ISO C++20 Draft
+	  ['gnu++20']   = 'c++20',   -- GNU dialect of ISO C++20
+  }
+
+  if standards[cfg.cppdialect] ~= nil then
+  	return '-std=' .. standards[cfg.cppdialect]
+  else
+	  return ''
+  end
+end
+
 function m.getCommonFlags(cfg)
   local toolset = m.getToolset(cfg)
   local flags = toolset.getcppflags(cfg)
@@ -30,6 +66,7 @@ function m.getCommonFlags(cfg)
   -- compile_commands.json have problems with relative include paths
   flags = table.join(flags, m.getIncludeDirs(cfg))
   flags = table.join(flags, toolset.getcflags(cfg))
+  flags = table.join(flags, m.getCppStandard(cfg))
   return table.join(flags, cfg.buildoptions)
 end
 
