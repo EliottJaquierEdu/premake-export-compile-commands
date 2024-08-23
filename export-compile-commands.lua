@@ -51,7 +51,7 @@ function m.getCppStandard(cfg)
   }
 
   if standards[cfg.cppdialect] ~= nil then
-  	return '-std=' .. standards[cfg.cppdialect]
+    return '-std=' .. standards[cfg.cppdialect]
   else
 	  return ''
   end
